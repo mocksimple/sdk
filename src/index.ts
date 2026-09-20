@@ -93,7 +93,7 @@ export type {
 /** Same value as the npm package version (js/package.json) and the wasm's
  * `version()` — scripts/check-version.mjs keeps the literals aligned, and
  * init() refuses a shim/wasm mismatch at runtime. */
-export const VERSION = '0.2.0';
+export const VERSION = '0.2.1';
 
 /** ABI stamp this shim was built against (checked at init()). v2: resident
  * images by key, canvas output, resetGpu, prepare progress. v3: half-size

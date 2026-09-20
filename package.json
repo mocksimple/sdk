@@ -1,6 +1,6 @@
 {
   "name": "mocksimple",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "type": "module",
   "description": "Put a design onto a real product photo — the MockSimple render SDK (Rust/WASM engine + TypeScript shim)",
   "license": "Apache-2.0",

@@ -18,8 +18,6 @@ repository exists. For anything else: <support@mocksimple.com>.
 
 ---
 
-# mocksimple
-
 ![A photo of a plain olive t-shirt; the surface the engine solved out of it sweeps
 across as depth, normals and shading; then a design is dragged onto the shirt,
 resized and turned, following the fabric.](https://mocksimple.com/sdk-demo.gif)
