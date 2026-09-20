@@ -152,7 +152,21 @@ useEffect(() => {
 
 The engine ships as `pkg/mockup_bg.wasm` and is located relative to the
 module via `new URL('mockup_bg.wasm', import.meta.url)`. Vite, webpack 5,
-Rspack/Rsbuild and Parcel turn that into an asset with no configuration.
+Rspack/Rsbuild and Parcel turn that into an asset with no configuration
+**when they build**.
+
+Vite's **dev server** is the exception, and it is worth knowing before you
+meet it. It pre-bundles dependencies into `node_modules/.vite/deps/`; the
+URL above then resolves next to that copy, where the binary was never put,
+and Vite's fallback answers with `index.html` at status 200. The shim gets
+a web page where it expected wasm. One line fixes it:
+
+```js
+// vite.config.js
+export default { optimizeDeps: { exclude: ['mocksimple'] } };
+```
+
+`vite build` needs nothing — the asset is emitted correctly there.
 
 If your toolchain does not (Next.js App Router, Turbopack, a plain
 `<script type="module">` from a CDN), tell `init()` where it is:

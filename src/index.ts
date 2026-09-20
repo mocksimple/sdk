@@ -150,9 +150,29 @@ export function init(options?: InitOptions): Promise<void> {
       );
     } catch (e) {
       if (typeof WebAssembly !== 'undefined' && e instanceof WebAssembly.CompileError) {
+        // A CompileError says the bytes were not valid WebAssembly. Two very
+        // different causes produce it, and this used to name only one of
+        // them: CSP without 'wasm-unsafe-eval', or — far more likely — the
+        // .wasm URL answered with something that is not wasm at all.
+        //
+        // Vite's dev server does exactly that. It pre-bundles dependencies
+        // into node_modules/.vite/deps/, the engine locates its binary with
+        // `new URL('mockup_bg.wasm', import.meta.url)`, and the binary was
+        // never copied there — so the SPA fallback returns index.html with
+        // status 200 and the shim tries to compile a web page. Reported as a
+        // CSP problem, that sends the reader to configure headers that were
+        // never the issue.
+        //
+        // The browser's own message names the bytes it found ("expected magic
+        // word 00 61 73 6d, found 3c 21 64 6f" — `3c 21` being `<!`), which
+        // separates the two cases at a glance, so it is carried through
+        // instead of being swallowed.
         throw new MockupError(
           'unsupported',
-          "wasm compilation blocked (CSP 'wasm-unsafe-eval' required?)",
+          'wasm did not compile. Either the .wasm URL served something that is not WebAssembly ' +
+            "(a dev server or bundler answering with a page — with Vite, add optimizeDeps: " +
+            "{ exclude: ['mocksimple'] }), or CSP is missing 'wasm-unsafe-eval'. " +
+            `Underlying error: ${e instanceof Error ? e.message : String(e)}`,
           { detail: { capability: 'csp' }, cause: e },
         );
       }
