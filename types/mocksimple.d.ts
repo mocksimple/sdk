@@ -82,6 +82,13 @@ export interface InitOptions {
    * rsbuild). Pass an explicit value for Next.js App Router, Turbopack, or
    * CDN (`<script type="module">`) setups.
    *
+   * Vite's dev server is handled for you. Its dependency optimizer (esbuild,
+   * Vite 5–7) rewrites this module into `node_modules/.vite/deps/` without
+   * copying the binary beside it; the SDK notices that it is running from
+   * there, fetches the original at `node_modules/mocksimple/pkg/` and checks
+   * the response is wasm before using it. No `optimizeDeps.exclude` needed.
+   * Vite 8's rolldown optimizer corrects the path itself.
+   *
    * Per-type behavior:
    * - `string | URL`: fetched and instantiated.
    * - `Response`: consumed immediately via streaming compilation.

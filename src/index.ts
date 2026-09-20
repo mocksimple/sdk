@@ -93,7 +93,7 @@ export type {
 /** Same value as the npm package version (js/package.json) and the wasm's
  * `version()` — scripts/check-version.mjs keeps the literals aligned, and
  * init() refuses a shim/wasm mismatch at runtime. */
-export const VERSION = '0.2.1';
+export const VERSION = '0.2.2';
 
 /** ABI stamp this shim was built against (checked at init()). v2: resident
  * images by key, canvas output, resetGpu, prepare progress. v3: half-size
@@ -125,6 +125,50 @@ const DEFAULT_MODEL_ENDPOINT = 'https://mocksimple.com/v1/surfaces';
 
 let initPromise: Promise<void> | null = null;
 
+/**
+ * Vite's dev server pre-bundles dependencies into node_modules/.vite/deps/,
+ * and the glue locates the binary with `new URL('mockup_bg.wasm',
+ * import.meta.url)` — which, once the glue has been rewritten into that
+ * directory, points beside a copy that was never made. Vite's SPA fallback
+ * then answers the request with index.html at status 200, and the engine
+ * fails to compile a web page. Vite 8's rolldown optimizer rewrites the
+ * relative path itself (vitejs/vite@ca96cbc); the esbuild optimizer in
+ * 5, 6 and 7 never did (vitejs/vite#8427), and those are most installs.
+ *
+ * The relocation has a signature: this module's own URL sits under
+ * `/node_modules/.vite/`. That is not a guess about where the binary might
+ * be — it is a precise reading of what happened to this file, and the
+ * original is always at `<same prefix>/node_modules/mocksimple/pkg/`,
+ * which Vite serves in dev whether node_modules is flat (npm) or symlinked
+ * (pnpm); both were checked. The candidate is fetched and its content type
+ * read before it is trusted, so a layout this does not understand falls
+ * back to the default path and the precise error, never to a silent wrong
+ * binary. A good Response is handed to the glue as-is, which keeps
+ * streaming compilation.
+ *
+ * Returns undefined — "use the default" — everywhere else, which is every
+ * build tool, every production bundle, and Vite 8.
+ */
+async function relocatedWasm(): Promise<{ module_or_path: Response } | undefined> {
+  let here: URL;
+  try {
+    here = new URL(import.meta.url);
+  } catch {
+    return undefined;
+  }
+  const m = /^(.*)\/node_modules\/\.vite\//.exec(here.pathname);
+  if (!m) return undefined;
+  const candidate = new URL(`${m[1]}/node_modules/mocksimple/pkg/mockup_bg.wasm`, here.origin);
+  try {
+    const res = await fetch(candidate);
+    const type = res.headers.get('content-type') ?? '';
+    if (!res.ok || /text\/html/i.test(type)) return undefined;
+    return { module_or_path: res };
+  } catch {
+    return undefined;
+  }
+}
+
 /** Loads and instantiates the wasm once per page. Idempotent; concurrent
  * calls coalesce; a failed load resets so a later call can retry. */
 export function init(options?: InitOptions): Promise<void> {
@@ -146,7 +190,7 @@ export function init(options?: InitOptions): Promise<void> {
       await wasmInit(
         options?.wasm !== undefined
           ? { module_or_path: options.wasm as Exclude<InitOptions['wasm'], undefined> }
-          : undefined,
+          : await relocatedWasm(),
       );
     } catch (e) {
       if (typeof WebAssembly !== 'undefined' && e instanceof WebAssembly.CompileError) {

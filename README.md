@@ -155,18 +155,19 @@ module via `new URL('mockup_bg.wasm', import.meta.url)`. Vite, webpack 5,
 Rspack/Rsbuild and Parcel turn that into an asset with no configuration
 **when they build**.
 
-Vite's **dev server** is the exception, and it is worth knowing before you
-meet it. It pre-bundles dependencies into `node_modules/.vite/deps/`; the
-URL above then resolves next to that copy, where the binary was never put,
-and Vite's fallback answers with `index.html` at status 200. The shim gets
-a web page where it expected wasm. One line fixes it:
+Vite's **dev server** is the one place that pattern breaks, and from 0.2.2
+the SDK handles it for you. Vite 5–7 pre-bundle dependencies into
+`node_modules/.vite/deps/` without copying the binary beside the rewritten
+module, so the URL above lands on a file that does not exist and Vite's
+fallback answers with `index.html` at status 200. The SDK detects that it
+is running from that directory, fetches the original at
+`node_modules/mocksimple/pkg/mockup_bg.wasm` (served in dev, for npm and
+pnpm layouts alike) and only uses it after checking the response really is
+wasm. Nothing to configure. Vite 8 corrects the path in its own optimizer
+([vitejs/vite@ca96cbc](https://github.com/vitejs/vite/commit/ca96cbc8eff23091c288f9eaf1944af2de3c564f)).
 
-```js
-// vite.config.js
-export default { optimizeDeps: { exclude: ['mocksimple'] } };
-```
-
-`vite build` needs nothing — the asset is emitted correctly there.
+On 0.2.1 and earlier, add `optimizeDeps: { exclude: ['mocksimple'] }` to
+`vite.config.js`. `vite build` never needed anything.
 
 If your toolchain does not (Next.js App Router, Turbopack, a plain
 `<script type="module">` from a CDN), tell `init()` where it is:
