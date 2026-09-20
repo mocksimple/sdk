@@ -1,0 +1,29 @@
+/**
+ * Emit config for the published package: src/*.ts -> dist/*.js.
+ *
+ * The PUBLISHED type surface is the hand-written contract
+ * (types/mocksimple.d.ts, a verbatim copy of api/mocksimple.d.ts), which
+ * package.json `exports.types` points at directly — not the declarations
+ * emitted here. Those exist so our own tests can import dist/*.js with
+ * types; `exports` makes them unreachable from outside (pinned by
+ * ../consumer-check). test/contract-check.ts pins impl against the contract.
+ *
+ * No source maps of either kind. dist/*.js is unminified and keeps every
+ * comment, so a .js.map would only rename stack frames from dist/*.js to
+ * src/*.ts at the cost of ~120 kB of install size; and a declarationMap
+ * would point at ../src/*.ts, which the tarball does not contain. If maps
+ * ever come back they must embed their sources (`inlineSources`): a map
+ * that references unshipped files makes consumers' bundlers warn.
+ */
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "declarationMap": false,
+    "sourceMap": false,
+    "rootDir": "src",
+    "outDir": "dist"
+  },
+  "include": ["src"]
+}

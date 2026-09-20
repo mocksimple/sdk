@@ -1,0 +1,10 @@
+mocksimple
+Copyright 2026 MockSimple
+
+This product includes the compiled WebAssembly engine (pkg/mockup_bg.wasm),
+built from Rust sources that are not distributed with this package. The
+engine is covered by the same Apache-2.0 grant as the rest of this package.
+
+Only this npm package is Apache-2.0. It is one directory of a larger,
+otherwise unlicensed repository — the gateway, the web Studio, the iOS app
+and the model service are not covered by this license.

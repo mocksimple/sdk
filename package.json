@@ -1,0 +1,67 @@
+{
+  "name": "mocksimple",
+  "version": "0.2.0",
+  "type": "module",
+  "description": "Put a design onto a real product photo — the MockSimple render SDK (Rust/WASM engine + TypeScript shim)",
+  "license": "Apache-2.0",
+  "author": "MockSimple",
+  "homepage": "https://mocksimple.com/developers.html",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mocksimple/sdk.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mocksimple/sdk/issues"
+  },
+  "keywords": [
+    "mockup",
+    "product-photo",
+    "print-on-demand",
+    "wasm",
+    "webgl",
+    "rendering",
+    "decal",
+    "sdk",
+    "mockup-generator",
+    "product-mockup",
+    "tshirt-mockup",
+    "image-compositing",
+    "depth-map",
+    "merch"
+  ],
+  "main": "./dist/index.js",
+  "types": "./types/mocksimple.d.ts",
+  "exports": {
+    ".": {
+      "types": "./types/mocksimple.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "sideEffects": [
+    "./dist/index.js"
+  ],
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch --preserveWatchOutput",
+    "sync-contract": "node scripts/sync-contract.mjs",
+    "check-contract": "node scripts/sync-contract.mjs --check",
+    "check-version": "node scripts/check-version.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run check-contract && npm run check-version && npm run build && node --test \"test/*.test.ts\"",
+    "pack-smoke": "node scripts/pack-smoke.mjs",
+    "prepublishOnly": "npm run check-contract && npm run check-version && npm test && npm run pack-smoke",
+    "prepack": "npm run sync-contract && npm run build && node scripts/publish-manifest.mjs --strip",
+    "postpack": "node scripts/publish-manifest.mjs --restore"
+  },
+  "files": [
+    "dist",
+    "types",
+    "pkg",
+    "NOTICE"
+  ],
+  "devDependencies": {
+    "@types/node": "^26.5.0",
+    "typescript": "^5.6.3"
+  }
+}
